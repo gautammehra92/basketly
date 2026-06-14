@@ -1,6 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { BasketContext } from '../context/BasketContext';
+import { AuthContext } from '../context/AuthContext';
+import { addItemToBasket } from '../api';
 
 export default function CreateBasket({ navigation }) {
     const { createNewBasket, addItem } = useContext(BasketContext);
@@ -27,23 +29,25 @@ export default function CreateBasket({ navigation }) {
         setItems(items.filter(item => item.id !== id));
     };
 
+    const { user } = useContext(AuthContext);
+
     const handleSave = async () => {
         if (items.length === 0) {
             Alert.alert("Empty Basket", "Please add at least one item.");
             return;
         }
-        await createNewBasket(basketName);
-        // In a more robust MVP, createNewBasket would return the basket, and then we'd add items.
-        // For simplicity, we just navigate back to Home. The user can add items through the context.
-        // Wait, we need to add the items to the backend. Let's do it sequentially.
         try {
-            await createNewBasket(basketName);
-            // Since createNewBasket doesn't return the ID cleanly in our simple context without refactoring,
-            // we rely on the context updating. Wait, the context `createNewBasket` function updates the `basket` state.
-            // But state updates are asynchronous. 
-            // We will just do a mock save for the UI flow and let them add items via BasketDetail later, 
-            // OR we can refactor `createNewBasket` to wait.
-            // Actually, we'll just go back to home for now. The items array here is just local state.
+            const newBasket = await createNewBasket(basketName);
+            if (newBasket) {
+                // Now add all items to the backend sequentially
+                for (let item of items) {
+                    await addItemToBasket(user.id, newBasket.id, { 
+                        product_name: item.product_name, 
+                        quantity: item.quantity, 
+                        unit: item.unit 
+                    });
+                }
+            }
         } catch (e) {
             console.error(e);
         }

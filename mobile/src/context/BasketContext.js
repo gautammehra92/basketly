@@ -33,8 +33,10 @@ export const BasketProvider = ({ children }) => {
         try {
             const data = await createBasket(user.id, name);
             setBasket(data);
+            return data;
         } catch (error) {
             console.error(error);
+            return null;
         }
     };
 
