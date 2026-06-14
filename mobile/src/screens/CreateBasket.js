@@ -33,7 +33,11 @@ export default function CreateBasket({ navigation }) {
 
     const handleSave = async () => {
         if (items.length === 0) {
-            Alert.alert("Empty Basket", "Please add at least one item.");
+            if (Platform.OS === 'web') {
+                window.alert("Empty Basket: Please add at least one item.");
+            } else {
+                Alert.alert("Empty Basket", "Please add at least one item.");
+            }
             return;
         }
         try {
