@@ -54,8 +54,24 @@ export default function CreateBasket({ navigation }) {
         navigation.goBack();
     };
 
-    const applyPreset = (presetItems) => {
+    const applyPreset = async (presetItems, title) => {
         setItems(presetItems.map(item => ({...item, id: Math.random().toString()})));
+        
+        try {
+            const newBasket = await createNewBasket(title);
+            if (newBasket) {
+                for (let item of presetItems) {
+                    await addItemToBasket(user.id, newBasket.id, { 
+                        product_name: item.product_name, 
+                        quantity: item.quantity, 
+                        unit: item.unit 
+                    });
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        navigation.goBack();
     };
 
     const presets = [
@@ -104,7 +120,7 @@ export default function CreateBasket({ navigation }) {
                 <View style={styles.presetsSection}>
                     <Text style={styles.presetsTitle}>Quick Start Baskets</Text>
                     {presets.map((preset, index) => (
-                        <TouchableOpacity key={index} style={styles.presetCard} onPress={() => applyPreset(preset.items)}>
+                        <TouchableOpacity key={index} style={styles.presetCard} onPress={() => applyPreset(preset.items, preset.title)}>
                             <Text style={styles.presetCardTitle}>{preset.title}</Text>
                             <Text style={styles.presetCardDesc}>{preset.items.map(i => i.product_name).join(', ')}</Text>
                         </TouchableOpacity>
