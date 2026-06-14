@@ -6,6 +6,13 @@ const db = require('./db');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    if (Object.keys(req.body).length > 0) {
+        console.log('Body:', req.body);
+    }
+    next();
+});
 
 // Auth Endpoints
 app.post('/register', (req, res) => {
@@ -44,7 +51,7 @@ const authMiddleware = (req, res, next) => {
 
 // Basket Endpoints
 app.get('/basket', authMiddleware, (req, res) => {
-    db.get(`SELECT * FROM Baskets WHERE user_id = ?`, [req.userId], (err, basket) => {
+    db.get(`SELECT * FROM Baskets WHERE user_id = ? ORDER BY ROWID DESC`, [req.userId], (err, basket) => {
         if (err) return res.status(500).json({ error: err.message });
         if (!basket) return res.json(null);
 
